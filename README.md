@@ -10,9 +10,7 @@ This repo provides a concise overview of key concepts and techniques for buildin
 
 To run or modify the Bot Sale agent, navigate to the `bot_sale` directory.
 
-**Click the image below to watch the demo video:**
-
-[![Bot Sale](images/chatbot.png)](https://youtu.be/Fvc_qRYzTWo)
+[Bot Sale demo video](https://youtu.be/Fvc_qRYzTWo)
 
 
 ### 2. Mathematical Reasoning Agent
