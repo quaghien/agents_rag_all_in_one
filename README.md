@@ -1,33 +1,12 @@
 # Agent Knowledge and Applications
 
-This repo provides a concise overview of key concepts and techniques for building Agentic AI systems. It covers common design patterns (like Reflection, ReAct, and Planning), core agent components (such as routing, guardrails, and streaming), and standard communication protocols (MCP, A2A, ACP). It also details the full Retrieval-Augmented Generation (RAG) pipeline—from chunk creation to re-ranking—and includes advanced methods like Graph RAG. Ideal for designing intelligent, interactive, and modular AI agents.
-
-## Applications
-
-### 1.  Bot Sale
-
-( OpenAI Agents SDK + Guardrails input + Flow Agent(prompting) + Retrieval DB tool + RAG tool)
-
-To run or modify the Bot Sale agent, navigate to the `bot_sale` directory.
-
-[Bot Sale demo video](https://youtu.be/Fvc_qRYzTWo)
-
-
-### 2. Mathematical Reasoning Agent
-
-( LangGraph + react + reflection + re-planning)
-
-You can find the Jupyter Notebook for this agent here:  
-[Mathematical Reasoning Agent Notebook](bot_sale/math_agent.ipynb)
-
 ## 🤖 Table of Contents
 
-- [5 Agentic AI Design Patterns](#5-agentic-ai-design-patterns)
-  - [1. Reflection Pattern](#1-reflection-pattern)  
-  - [2. Tool Use Pattern](#2-tool-use-pattern)  
-  - [3. ReAct (Reason and Act) Pattern](#3-react-reason-and-act-pattern)  
-  - [4. Planning Pattern](#4-planning-pattern)  
-  - [5. Multi-Agent Pattern](#5-multi-agent-pattern)  
+- [Agentic AI Design Patterns & Architectures](#agentic-ai-design-patterns--architectures)
+  - [1. Core Cognitive Patterns](#1-core-cognitive-patterns)
+  - [2. Multi-Agent Coordination](#2-multi-agent-coordination)
+  - [3. Levels of Autonomy](#3-levels-of-autonomy)
+  - [4. Theoretical Archetypes](#4-theoretical-archetypes)
 - [Agent Concepts](#agent-concepts)  
   - [1. Routing (Hand-off)](#1-routing-hand-off)  
   - [2. Guardrails](#2-guardrails)  
@@ -37,6 +16,13 @@ You can find the Jupyter Notebook for this agent here:
   - [6. Streaming](#6-streaming)  
   - [7. Parallelization](#7-parallelization)  
   - [8. Human-in-the-loop](#8-human-in-the-loop)
+- [System Monitoring, Audit & Feedback](#system-monitoring-audit--feedback)
+  - [1. Logging & Tracing](#1-logging--tracing)
+  - [2. Alerting](#2-alerting)
+  - [3. Evaluation / Red Team](#3-evaluation--red-team)
+  - [4. Incident Response](#4-incident-response)
+  - [5. Feedback Loop / Continuous Improvement](#5-feedback-loop--continuous-improvement)
+- [Security in Agentic AI](#security-in-agentic-ai)
 - [MCP (Model Context Protocol)](#mcp-model-context-protocol)
 - [Agent2Agent (A2A) Protocol](#agent2agent-a2a-protocol)
 - [ACP (Agent Communication Protocol)](#acp-agent-communication-protocol)
@@ -53,27 +39,52 @@ You can find the Jupyter Notebook for this agent here:
   - [10. Cross-encoder and Bi-encoder](#10-cross-encoder-and-bi-encoder)  
   - [11. Graph RAG](#11-graph-rag)
 
-## 5 Agentic AI Design Patterns
+---
 
-### 1. Reflection pattern
+## Agentic AI Design Patterns & Architectures
 
-<img src="images/reflection.png" width="40%" alt="model">
+Designing and categorizing AI Agents in real-world systems goes beyond a few standalone models. It expands across multiple dimensions: from internal cognitive processes and system coordination to levels of autonomy.
 
-### 2. Tool use pattern
+### 1. Core Cognitive Patterns
+Defines how a single Agent thinks, makes decisions, and interacts with its environment.
 
-<img src="images/tool.png" width="40%" alt="model">
+* **ReAct (Reason and Act):** The core loop: *Thought -> Action -> Observation*. Enables the Agent to dynamically combine logical reasoning with real-world execution.
+    <br><img src="images/react.png" width="40%" alt="ReAct Pattern">
+* **Tool Use / Function Calling:** Recognizes context to automatically extract parameters and trigger external APIs, databases, or Sandbox environments.
+    <br><img src="images/tool.png" width="40%" alt="Tool Use Pattern">
+* **Reflection / Self-Correction:** The Agent acts as its own "critic," reviewing for errors and refining the output quality before responding to the user.
+    <br><img src="images/reflection.png" width="40%" alt="Reflection Pattern">
+* **Planning (Plan-and-Solve):** Deconstructs large, complex goals into manageable sub-tasks, creates a roadmap, and proactively adjusts the plan if errors occur.
+    <br><img src="images/planning.png" width="40%" alt="Planning Pattern">
+* **Memory-Augmented:** Integrates Short-term memory (Context window) and Long-term memory (Vector DB/Graph) to maintain consistency across extended sessions.
 
-### 3. ReAct (Reason and Act) pattern
+### 2. Multi-Agent Coordination
+Dictates how multiple specialized Agents are organized, communicate, and delegate tasks.
 
-<img src="images/react.png" width="40%" alt="model">
+<img src="images/multi-agent.png" width="40%" alt="Multi-Agent Pattern">
 
-### 4. Planning pattern
+* **Router (Classifier):** The entry point. Receives the input stream and routes it to the most appropriate specialized Agent or pipeline.
+* **Supervisor / Orchestrator:** A central Agent acting as a "manager." It receives the main task, delegates sub-tasks to Worker Agents, and synthesizes the final output.
+* **Sequential Workflow:** A linear pipeline where data is automatically passed from one Agent to the next (e.g., *Researcher -> Writer -> Reviewer*).
+* **Peer-to-Peer (Conversational):** Agents debate, critique, and collaborate as equals to find the optimal solution.
+* **Hierarchical Teams:** A multi-layered tree structure where multiple Supervisors manage different sub-teams, designed for massive-scale systems.
 
-<img src="images/planning.png" width="40%" alt="model">
+### 3. Levels of Autonomy
+Determines the extent of human control and intervention in the Agent's execution loop.
 
-### 5. Multi-agent pattern
+* **Human-in-the-Loop (HITL):** The Agent pauses at sensitive nodes (e.g., payments, deleting data, sending emails) to wait for human approval before proceeding.
+* **Fully Autonomous:** Operates entirely independently. Receives the initial goal and runs the execution loop until completion (e.g., AutoGPT).
+* **Human-on-the-Loop:** Humans only monitor the process (Observability) and have the authority to intervene or halt the system if necessary, without needing to approve every individual step.
 
-<img src="images/multi-agent.png" width="40%" alt="model">
+### 4. Theoretical Archetypes
+Based on classic AI literature regarding the cognitive capabilities of an Agent.
+
+* **Reflex Agents:** Actions are based purely on rigid *If-Then* rules (Simple Reflex) or local state memory (Model-based Reflex).
+* **Goal-Based Agents:** Select sequences of actions aimed at achieving a specific, predefined target state.
+* **Utility-Based Agents:** Go beyond just achieving a goal by prioritizing actions that yield the highest "utility score" or efficiency.
+* **Learning Agents:** Capable of self-updating and learning from past mistakes to optimize future decision-making processes.
+
+---
 
 ## Agent Concepts
 
@@ -83,13 +94,11 @@ Transferring tasks or control between agents to ensure seamless operation and fa
 
 <img src="images/router.png" width="60%" alt="model">
 
-
 ### 2. Guardrails
 
 Rules and constraints to keep agents operating safely, ethically, and reliably.
 
 <img src="images/guardrail.png" width="60%" alt="model">
-
 
 ### 3. Flow Agent
 
@@ -97,13 +106,11 @@ Manages the sequence and logic of tasks or conversations within an agent system.
 
 <img src="images/flow.png" width="60%" alt="model">
 
-
 ### 4. AI Gateway
 
 Interface connecting clients to multiple AI services, handling routing, security, and scaling.
 
 <img src="images/gateway.png" width="60%" alt="model">
-
 
 ### 5. Tracing
 
@@ -111,13 +118,11 @@ Logging detailed agent activities for debugging and performance monitoring.
 
 <img src="images/tracing.png" width="50%" alt="model">
 
-
 ### 6. Streaming
 
 Real-time continuous data flow processing between agents or systems.
 
 <img src="images/streaming.png" width="50%" alt="model">
-
 
 ### 7. Parallelization
 
@@ -125,12 +130,46 @@ Splitting tasks to run simultaneously across agents/processors for faster result
 
 <img src="images/paralle.png" width="60%" alt="model">
 
-
 ### 8. Human-in-the-loop
 
 Involving humans in agent decisions or training for safety and accuracy.
 
 <img src="images/human.png" width="50%" alt="model">
+
+---
+
+## System Monitoring, Audit & Feedback
+
+A critical layer for large-scale, production-ready enterprise Agent systems to ensure reliability, security, and continuous enhancement over time.
+
+### 1. Logging & Tracing
+Recording granular system events, state changes, and specific LLM calls to debug complex multi-agent execution paths and monitor token usage.
+
+### 2. Alerting
+Automated notifications triggered by predefined thresholds (e.g., high latency, API failure rates, or budget limits) to proactively maintain system health.
+
+### 3. Evaluation / Red Team
+Continuous assessment of agent performance and security through adversarial testing (Red Teaming) to identify prompt injection vulnerabilities, hallucinations, and edge cases.
+
+### 4. Incident Response
+Standardized protocols, automated fallbacks, and circuit breakers designed to handle critical agent failures or unauthorized actions efficiently in production.
+
+### 5. Feedback Loop / Continuous Improvement
+Mechanisms to collect user feedback, human-in-the-loop corrections, and telemetry data to iteratively refine prompts, adjust guardrails, and update underlying models or logic.
+
+---
+
+## Security in Agentic AI
+
+Security is paramount when deploying autonomous agents with access to external tools and data. For a comprehensive collection of vulnerabilities, defense mechanisms, and testing tools, refer to:
+
+👉 **[AWESOME-AI-SECURITY](https://github.com/quaghien/AWESOME-AI-SECURITY)**
+
+**Core Security Focus Areas:**
+* **Input Validation:** Treating all external data (prompts, RAG chunks, web results) as untrusted to prevent indirect prompt injection.
+* **Access Control:** Enforcing least privilege for tools and implementing strict Human-in-the-loop (HITL) policies for destructive actions.
+* **Output Handling:** Sanitizing and escaping agent outputs to prevent downstream execution of malicious payloads (e.g., XSS).
+* **Adversarial Testing:** Continuously evaluating the system against jailbreaks, obfuscation techniques, and excessive agency exploits.
 
 ## MCP (Model Context Protocol)
 
