@@ -313,11 +313,158 @@ To better understand the Agent Communication Protocol (ACP) and its role in mult
 
 # Retrieval-Augmented Generation (RAG)
 
+Retrieval-Augmented Generation (RAG) combines information retrieval with large language models. Instead of relying only on the model's internal knowledge, a RAG system retrieves relevant external documents and uses them as grounded context when generating an answer.
+
+## Agentic RAG Patterns
+
+Traditional RAG usually follows a fixed flow: retrieve relevant documents, add them to the prompt, and generate an answer. Agentic RAG extends this approach by allowing the system to decide how to search, which tools to use, whether retrieved evidence is sufficient, and when to retry or stop.
+
+### 1. Query Transformation
+
+Before retrieval, an agent can improve the original user query.
+
+* **Query rewriting**: Rewrite unclear, informal, or incomplete questions into a search-friendly query.
+* **Multi-query retrieval**: Generate multiple semantically different search queries, retrieve documents for each query, and merge the results.
+* **Query decomposition**: Split complex questions into smaller sub-questions and retrieve evidence for each one.
+* **HyDE (Hypothetical Document Embeddings)**: Generate a hypothetical answer or document first, then use it as the retrieval query.
+* **Step-back prompting**: Generate a broader conceptual question before retrieving detailed evidence.
+* **Query clarification**: Detect missing details such as product name, version, location, or timeframe before searching.
+
+### 2. Retrieval Routing and Tool Selection
+
+An agent does not need to use the same retrieval method for every question.
+
+* **Query routing**: Route a query to the most appropriate knowledge source, such as product documentation, policy documents, SQL databases, APIs, or web search.
+* **Metadata filtering**: Apply filters such as document version, language, region, department, date, or user permission before retrieval.
+* **Hybrid retrieval**: Combine keyword search, vector search, and metadata filtering.
+* **Tool selection**: Decide whether to use vector search, SQL, APIs, calculators, browsers, or internal tools.
+* **Conditional retrieval**: Retrieve documents only when the model lacks sufficient confidence or when up-to-date evidence is required.
+
+### 3. Iterative Retrieval and Reasoning
+
+For complex questions, a single retrieval step may not be enough.
+
+* **Retrieve–reason–retrieve**: Retrieve initial evidence, reason over it, generate a follow-up query, and retrieve again.
+* **Multi-hop retrieval**: Retrieve facts from multiple documents to answer questions that require connecting different pieces of information.
+* **Active retrieval during generation**: Pause generation when evidence is insufficient, search for additional information, and continue answering.
+* **Budget-aware retrieval**: Limit the number of retrieval rounds, tool calls, documents, tokens, or latency.
+
+### 4. Evidence Evaluation and Corrective Retrieval
+
+Agentic RAG systems should evaluate the retrieved context instead of assuming it is correct.
+
+* **Relevance grading**: Score retrieved chunks based on how relevant they are to the query.
+* **Evidence sufficiency checking**: Verify whether the retrieved documents contain enough information to answer the question.
+* **Corrective retrieval**: Rewrite the query, change retrieval strategy, switch data sources, or retry when evidence quality is poor.
+* **Reranking**: Retrieve a broad set of documents first, then rank them again with a stronger relevance model.
+* **Hallucination checking**: Verify that generated claims are supported by retrieved evidence.
+* **Citation verification**: Ensure each important claim can be traced back to a relevant source.
+* **Answer abstention**: Return an explicit “insufficient evidence” response when the available context cannot support a reliable answer.
+
+### 5. Planning and Agent Orchestration
+
+Agentic RAG can use explicit planning before performing retrieval.
+
+* **ReAct pattern**: Alternate between reasoning, tool calls, observations, and further reasoning.
+* **Plan-and-execute**: Create a plan first, then execute each retrieval or tool-use step.
+* **Planner–executor–verifier**: Use one component to plan, another to retrieve and execute tasks, and a third to verify the final answer.
+* **Branching search**: Explore multiple retrieval strategies or hypotheses, then select the strongest evidence path.
+* **Fallback strategies**: Switch from vector search to keyword search, from internal documents to APIs, or from one index to another when retrieval fails.
+
+### 6. Context Engineering
+
+Retrieved documents must be prepared carefully before being passed to the language model.
+
+* **Contextual compression**: Keep only the sentences or passages that directly support the answer.
+* **Evidence extraction**: Extract key facts, numbers, conditions, and exceptions from retrieved documents.
+* **Parent-child retrieval**: Retrieve small chunks for precision, but provide the larger parent section for context.
+* **Map-reduce synthesis**: Summarize evidence from multiple documents independently before combining it into a final answer.
+* **Conflict resolution**: Detect conflicting sources and prioritize information based on authority, freshness, version, or policy hierarchy.
+
+### 7. Knowledge Structure Retrieval
+
+Some datasets require more than flat document chunking.
+
+* **Hierarchical RAG**: Retrieve information at multiple levels, such as document, section, and chunk.
+* **RAPTOR-style retrieval**: Build recursive summaries of document clusters to support both detailed and high-level questions.
+* **GraphRAG**: Build a graph of entities and relationships for questions involving dependencies, relationships, and cross-document reasoning.
+* **Temporal RAG**: Retrieve information based on effective date, document version, and data freshness.
+
+### 8. Memory and Multi-Agent RAG
+
+For long-running or specialized workflows, an agent can use memory and multiple specialized agents.
+
+* **Conversation memory**: Preserve relevant context from the current conversation.
+* **Episodic memory**: Store previous retrieval attempts, successful strategies, and failure cases.
+* **Semantic memory**: Store verified facts, decisions, and user preferences.
+* **Supervisor-agent pattern**: A supervisor routes tasks to specialized agents such as legal, product, HR, SQL, or web-research agents.
+* **Researcher–verifier–writer pattern**: One agent retrieves evidence, another validates it, and another writes the final answer.
+* **Parallel retrieval agents**: Multiple agents search different sources or hypotheses at the same time before merging results.
+
+### Recommended Production Flow
+
+```text
+Classify query
+  → Clarify or rewrite query
+  → Route to the appropriate source or tool
+  → Retrieve documents with hybrid search and metadata filters
+  → Rerank and evaluate evidence quality
+  → Retry, decompose, or retrieve again when evidence is insufficient
+  → Extract key facts and resolve conflicts
+  → Generate an answer with citations
+  → Verify grounding, completeness, and hallucination risk
+  → Return the answer or abstain
+```
+
+## RAG Evaluation
+
+RAG evaluation measures both retrieval quality and answer quality to ensure the system retrieves useful evidence and generates grounded responses.
+
+### Evaluation Libraries
+
+| Library                 | Purpose                                                                            |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| **Ragas**               | Evaluate context quality, faithfulness, answer relevancy, and answer correctness.  |
+| **DeepEval**            | Run automated RAG tests, LLM-as-a-judge metrics, and regression testing.           |
+| **LangSmith / Phoenix** | Trace retrieval, prompts, latency, and failures during development and production. |
+
+### Core Metrics
+
+| Area                | Metrics                                              | Description                                                          |
+| ------------------- | ---------------------------------------------------- | -------------------------------------------------------------------- |
+| **Retrieval**       | Recall@k, Precision@k, MRR, nDCG                     | Measures whether relevant documents are retrieved and ranked highly. |
+| **Context Quality** | Context Precision, Context Recall, Context Relevancy | Measures whether retrieved chunks are relevant and sufficient.       |
+| **Answer Quality**  | Faithfulness, Answer Relevancy, Answer Correctness   | Measures whether answers are grounded, relevant, and correct.        |
+| **Operational**     | Latency, Cost per Query                              | Measures response speed and system cost.                             |
+
+### Ragas and DeepEval Metrics
+
+**Ragas** commonly uses:
+
+* **Context Precision**: relevant chunks appear earlier in the retrieved results.
+* **Context Recall**: retrieved context contains enough information to answer.
+* **Faithfulness**: generated claims are supported by the retrieved context.
+* **Answer Relevancy**: the answer directly addresses the user query.
+* **Answer Correctness**: the answer matches a reference answer.
+
+**DeepEval** provides similar metrics through:
+
+* `FaithfulnessMetric`
+* `AnswerRelevancyMetric`
+* `ContextualPrecisionMetric`
+* `ContextualRecallMetric`
+* `ContextualRelevancyMetric`
+* `GEval` for custom evaluation criteria.
+
+For a basic RAG evaluation pipeline, start with **Context Recall**, **Context Precision**, **Faithfulness**, **Answer Relevancy**, **Latency**, and **Cost per Query**.
+
+
 ## Workflow of a RAG System
 
 <img src="images/rag1.png" width="60%" alt="model">
 
 <img src="images/rag2.png" width="60%" alt="model">
+
 
 ### 1. Create chunks
 
